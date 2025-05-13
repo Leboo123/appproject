@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "111830153596",
+    "project_id": "polls-c8386",
+    "storage_bucket": "polls-c8386.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:111830153596:android:d475a83125d3c418ceccf9",
+        "android_client_info": {
+          "package_name": "com.paul.voting"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDrSPYi4PmbAvkz74viOM-NcxpQOIARgpw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
