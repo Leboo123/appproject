@@ -39,8 +39,8 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
 import androidx.navigation.NavHostController
+import com.paul.voting.data.AuthViewModel
 
 @Composable
 fun registerScreen(navController: NavHostController) {
@@ -157,7 +157,10 @@ fun registerScreen(navController: NavHostController) {
 
         )
 
-        Button(onClick = {}){
+        Button(onClick = {
+            val myregister= AuthViewModel(navController,context)
+            myregister.signup(fullname.text.trim(),email.text.trim(),pass.text.trim(),confirmpass.text.trim())
+        }){
             Text(
                 text="REGISTER"
             )

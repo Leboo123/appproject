@@ -6,6 +6,7 @@ import androidx.navigation.NavController
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
 import com.paul.voting.model.User
+import com.paul.voting.navigation.ROUTE_DASHBOARD
 import com.paul.voting.navigation.ROUTE_HOME_SCREEN
 import com.paul.voting.navigation.ROUTE_REGISTER
 
@@ -54,7 +55,7 @@ class AuthViewModel(var navController: NavController, var context: Context){
             mAuth.signInWithEmailAndPassword(email, password).addOnCompleteListener {
                 if (it.isSuccessful ){
                     Toast.makeText(this.context, "Success", Toast.LENGTH_SHORT).show()
-                    navController.navigate("")
+                    navController.navigate(ROUTE_DASHBOARD)
                 }else{
                     Toast.makeText(this.context, "Error", Toast.LENGTH_SHORT).show()
                 }

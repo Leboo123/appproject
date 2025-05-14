@@ -38,6 +38,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.paul.voting.R
+import com.paul.voting.data.AuthViewModel
 
 @Composable
 fun loginscreen(navController: NavHostController) {
@@ -76,7 +77,7 @@ fun loginscreen(navController: NavHostController) {
         )
         Spacer(modifier = Modifier.height(16.dp))
         var email by remember{ mutableStateOf(TextFieldValue("")) }
-        var password by remember { mutableStateOf(TextFieldValue(""))}
+        var pass by remember { mutableStateOf(TextFieldValue(""))}
         var context= LocalContext.current
 
 
@@ -97,8 +98,8 @@ fun loginscreen(navController: NavHostController) {
         )
         Spacer(modifier = Modifier.height(16.dp))
         OutlinedTextField(
-            value = password,
-            onValueChange = {password=it},
+            value = pass,
+            onValueChange = {pass=it},
             label = {Text("Password")},
             singleLine = true,
             visualTransformation = PasswordVisualTransformation(),
@@ -114,7 +115,10 @@ fun loginscreen(navController: NavHostController) {
 
         )
         Spacer(modifier = Modifier.height(16.dp))
-        Button(onClick = {}) {
+        Button(onClick = {
+            val mylogin= AuthViewModel(navController,context)
+            mylogin.login(email.text.trim(),pass.text.trim())
+        }) {
 
             Text(text="login")
         }
