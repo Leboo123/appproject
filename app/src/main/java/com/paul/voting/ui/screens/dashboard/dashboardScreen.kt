@@ -1,48 +1,56 @@
 package com.paul.voting.ui.screens.dashboard
 
-import android.system.Os.poll
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.runtime.Composable
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import androidx.navigation.NavHostController
-import androidx.compose.material3.Text
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
+import kotlinx.coroutines.tasks.await
+import java.text.SimpleDateFormat
+import java.util.*
 
-import androidx.compose.material3.Button
-
-
-
+data class PollListItem(
+    val id: String,
+    val question: String,
+    val createdAt: Long
+)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun dashboardscreen( navController: NavHostController) {
+fun dashboardscreen(navController: NavController) {
+    var polls by remember { mutableStateOf<List<PollListItem>>(emptyList()) }
+    var isLoading by remember { mutableStateOf(true) }
 
-    val polls = listOf(
-        "Who should be the class rep?",
-        "Best programming language?",
-        "Favorite sport?",
-        "Vote for team lead",
-    )
+    LaunchedEffect(true) {
+        try {
+            val db = FirebaseFirestore.getInstance()
+            val snapshot = db.collection("polls")
+                .orderBy("createdAt", Query.Direction.DESCENDING)
+                .get()
+                .await()
+
+            polls = snapshot.documents.mapNotNull { doc ->
+                val id = doc.getString("id") ?: return@mapNotNull null
+                val question = doc.getString("question") ?: return@mapNotNull null
+                val createdAt = doc.getLong("createdAt") ?: 0L
+                PollListItem(id, question, createdAt)
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        } finally {
+            isLoading = false
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -51,10 +59,8 @@ fun dashboardscreen( navController: NavHostController) {
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primary,
                     titleContentColor = Color.White
-                )
-            )
-        },
-        floatingActionButton = {
+                ))
+        },        floatingActionButton = {
             FloatingActionButton(
                 onClick = { navController.navigate("addpoll") },
                 containerColor = MaterialTheme.colorScheme.primary
@@ -62,43 +68,49 @@ fun dashboardscreen( navController: NavHostController) {
                 Icon(Icons.Default.Add, contentDescription = "Create Poll", tint = Color.White)
             }
         },
-        content = { padding ->
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding)
-                    .padding(16.dp)
-            ) {
-                items(4) { poll ->
-                    pollCard(pollTitle = "poll")
+
+    ) { padding ->
+        Box(modifier = Modifier.padding(padding)) {
+            if (isLoading) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
                 }
+            } else if (polls.isEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize(),
+                ) {
             }
-        }
-    )
-}
-
-
-
-    @Composable
-    fun pollCard(pollTitle: String) {
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 8.dp),
-            elevation = CardDefaults.cardElevation(4.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White)
-        ) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Text(
-                    text = pollTitle,
-                    style = MaterialTheme.typography.titleMedium
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Button(onClick = { /* Navigate to poll details or vote */ }) {
-                    Text("Vote")
+            } else {
+                LazyColumn(modifier = Modifier.fillMaxSize().padding(16.dp)) {
+                    items(polls) { poll ->
+                        PollCard(poll = poll) {
+                            navController.navigate("vote_poll/${poll.id}")
+                        }
+                    }
                 }
             }
         }
     }
 
+}
 
+@Composable
+fun PollCard(poll: PollListItem, onClick: () -> Unit) {
+    val formatter = SimpleDateFormat("dd MMM yyyy, HH:mm", Locale.getDefault())
+    val dateStr = formatter.format(Date(poll.createdAt))
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 6.dp)
+            .clickable { onClick() },
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(text = poll.question, style = MaterialTheme.typography.titleMedium)
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(text = "Created: $dateStr", style = MaterialTheme.typography.bodySmall)
+        }
+    }
+}

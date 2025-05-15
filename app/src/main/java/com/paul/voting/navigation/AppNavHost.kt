@@ -9,7 +9,8 @@ import androidx.navigation.compose.rememberNavController
 import com.paul.voting.ui.screens.dashboard.dashboardscreen
 import com.paul.voting.ui.screens.home.homeScreen
 import com.paul.voting.ui.screens.login.loginscreen
-import com.paul.voting.ui.screens.polls.addPoll
+import com.paul.voting.ui.screens.polls.AddPollScreen
+import com.paul.voting.ui.screens.polls.VotePollScreen
 import com.paul.voting.ui.screens.register.registerScreen
 
 @Composable
@@ -33,6 +34,11 @@ fun AppNavhost(
             dashboardscreen(navController)
         }
         composable(ROUTE_ADD_POLL) {
-            addPoll(navController)
+            AddPollScreen(navController = navController)
         }
+        composable("vote_poll/{pollId}") { backStackEntry ->
+            val pollId = backStackEntry.arguments?.getString("pollId") ?: ""
+            VotePollScreen(pollId,navController=navController)
+        }
+
     }}
