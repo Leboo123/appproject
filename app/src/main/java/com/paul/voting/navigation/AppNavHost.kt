@@ -10,6 +10,7 @@ import com.paul.voting.ui.screens.dashboard.dashboardscreen
 import com.paul.voting.ui.screens.home.homeScreen
 import com.paul.voting.ui.screens.login.loginscreen
 import com.paul.voting.ui.screens.polls.AddPollScreen
+import com.paul.voting.ui.screens.polls.UpdatePollScreen
 import com.paul.voting.ui.screens.polls.VotePollScreen
 import com.paul.voting.ui.screens.register.registerScreen
 
@@ -40,5 +41,9 @@ fun AppNavhost(
             val pollId = backStackEntry.arguments?.getString("pollId") ?: ""
             VotePollScreen(pollId,navController=navController)
         }
-
+       composable ("update_poll/{pollId}"){
+            backStackEntry ->
+            val pollId = backStackEntry.arguments?.getString("pollId") ?: ""
+            UpdatePollScreen(pollId=pollId,navController=navController)
+        }
     }}

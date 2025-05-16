@@ -12,9 +12,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
+import com.paul.voting.data.PollViewModel
 import kotlinx.coroutines.tasks.await
 import java.text.SimpleDateFormat
 import java.util.*
@@ -30,7 +32,9 @@ data class PollListItem(
 fun dashboardscreen(navController: NavController) {
     var polls by remember { mutableStateOf<List<PollListItem>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
-
+    LaunchedEffect(Unit) {
+        PollViewModel.startListeningToPolls
+    }
     LaunchedEffect(true) {
         try {
             val db = FirebaseFirestore.getInstance()

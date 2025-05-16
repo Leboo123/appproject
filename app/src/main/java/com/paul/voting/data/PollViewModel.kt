@@ -1,9 +1,13 @@
 package com.paul.voting.data
 
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
 import kotlinx.coroutines.launch
@@ -12,6 +16,43 @@ import java.util.UUID
 class PollViewModel : ViewModel() {
 
     private val db = FirebaseFirestore.getInstance()
+    private val auth = FirebaseAuth.getInstance()
+
+
+    var polls by mutableStateOf<List<Poll>>(emptyList())
+        private set
+
+    var errorMessage by mutableStateOf<String?>(null)
+        private set
+
+    data class PublicPoll(
+        val id: String,
+        val title: String,
+        val options: List<String>,
+        val timestamp: Long
+    )
+
+    fun fetchPolls() {
+        db.collection("polls")
+            .get()
+            .addOnSuccessListener { result ->
+                polls = result.documents.mapNotNull { doc ->
+                    val poll = doc.toObject(Poll::class.java)
+                    poll?.let {
+                        Poll(
+                            id = doc.id,
+                            title = it.title,
+                            options = it.options,
+                            timestamp = it.timestamp
+                        )
+                    }
+                }
+            }
+            .addOnFailureListener {
+                errorMessage = it.message
+            }
+    }
+
 
     // Create a new poll with empty votes
     fun createPoll(question: String, options: List<String>, onResult: (Boolean, String?) -> Unit) {
@@ -71,5 +112,55 @@ class PollViewModel : ViewModel() {
             }
         }
     }
+    fun updatePoll(pollId: String, updatedquestion: String, updatedOptions: List<String>) {
+        val currentUserId = auth.currentUser?.uid ?: return
 
+        db.collection("polls").document(pollId).get()
+            .addOnSuccessListener { doc ->
+                val poll = doc.toObject(Poll::class.java)
+                if (poll != null && poll.creatorId == currentUserId) {
+                    val updates = mapOf(
+                        "title" to updatedquestion,
+                        "options" to updatedOptions
+                    )
+                    db.collection("polls").document(pollId)
+                        .update(updates)
+                        .addOnSuccessListener { fetchPolls() }
+                        .addOnFailureListener { errorMessage = it.message }
+                } else {
+                    errorMessage = "You are not authorized to update this poll."
+                }
+            }
+            .addOnFailureListener {
+                errorMessage = it.message
+            }
+    }
+    fun startListeningToPolls() {
+        db.collection("polls")
+            .addSnapshotListener { snapshots, error ->
+                if (error != null) {
+                    errorMessage = error.message
+                    return@addSnapshotListener
+                }
+
+                if (snapshots != null) {
+                    polls = snapshots.documents.mapNotNull { it.toObject(Poll::class.java) }
+                }
+            }
+    }
+    fun getPollById(pollId: String) {
+        db.collection("polls").document(pollId).get()
+            .addOnSuccessListener { doc ->
+                val poll = doc.toObject(Poll::class.java)
+                selectedPoll = poll
+            }
+    }
+
+    data class Poll(
+        val id: String = "",
+        val title: String = "",
+        val options: List<String> = emptyList(),
+        val creatorId: String = "",
+        val timestamp: Long = System.currentTimeMillis()
+    )
 }
