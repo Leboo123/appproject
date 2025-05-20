@@ -6,7 +6,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.paul.voting.ui.screens.dashboard.dashboardscreen
+import com.paul.voting.ui.screens.dashboard.DashboardScreen
 import com.paul.voting.ui.screens.home.homeScreen
 import com.paul.voting.ui.screens.login.loginscreen
 import com.paul.voting.ui.screens.polls.AddPollScreen
@@ -32,7 +32,7 @@ fun AppNavhost(
             loginscreen(navController)
         }
         composable(ROUTE_DASHBOARD) {
-            dashboardscreen(navController)
+            DashboardScreen(navController)
         }
         composable(ROUTE_ADD_POLL) {
             AddPollScreen(navController = navController)

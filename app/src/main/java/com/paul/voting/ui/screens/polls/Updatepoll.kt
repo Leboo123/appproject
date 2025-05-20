@@ -153,7 +153,7 @@ fun UpdatePollScreen(
                     onClick = {
                         val optionsList = optionText.split(",").map { it.trim() }
                         viewModel.updatePoll(
-                            updatedquestion = question,
+                            updatedQuestion = question,
                             updatedOptions = optionsList,
                             pollId = pollId
                         )

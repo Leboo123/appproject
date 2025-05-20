@@ -55,6 +55,8 @@ dependencies {
     implementation(libs.firebase.storage)
     implementation(libs.firebase.database)
     implementation(libs.firebase.firestore)
+    implementation ("com.jakewharton.threetenabp:threetenabp:1.4.5")
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

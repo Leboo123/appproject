@@ -3,34 +3,27 @@ package com.paul.voting.ui.screens.polls
 import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.*
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavController
 import androidx.navigation.NavHostController
-import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
 import com.paul.voting.data.PollViewModel
-import com.paul.voting.navigation.ROUTE_UPDATE_POLL
-import kotlinx.coroutines.tasks.await
-import androidx.compose.material3.*
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.runtime.*
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.selection.selectable
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -39,37 +32,48 @@ fun VotePollScreen(
     viewModel: PollViewModel = viewModel(),
     navController: NavHostController
 ) {
-    var question by remember { mutableStateOf("") }
-    var options by remember { mutableStateOf<List<String>>(emptyList()) }
+    /* ------------------------------------------------------------------ */
+    /*  UI state                                                          */
+    /* ------------------------------------------------------------------ */
+
+    var question       by remember { mutableStateOf("") }
+    var options        by remember { mutableStateOf<List<String>>(emptyList()) }
     var selectedOption by remember { mutableStateOf<String?>(null) }
-    var isLoading by remember { mutableStateOf(true) }
+    var isLoading      by remember { mutableStateOf(true) }
 
-    val context = LocalContext.current
-    val PurplePrimary = Color(0xFF6200EE)
-    val PurpleLight = Color(0xFFBB86FC)
-    val scrollState = rememberScrollState()
+    val context        = LocalContext.current
+    val PurplePrimary  = Color(0xFF6200EE)
+    val PurpleLight    = Color(0xFFBB86FC)
+    val scrollState    = rememberScrollState()
 
-    LaunchedEffect(Unit) {
-        PollViewModel.startListeningToPolls()
-    }
+    /* ------------------------------------------------------------------ */
+    /*  Load poll once                                                    */
+    /* ------------------------------------------------------------------ */
 
-    // Load poll data
     LaunchedEffect(pollId) {
-        val db = FirebaseFirestore.getInstance()
-        try {
-            val doc = db.collection("polls").document(pollId).get().await()
-            if (doc.exists()) {
-                question = doc.getString("title") ?: doc.getString("question") ?: ""
-                options = doc.get("options") as? List<String> ?: emptyList()
-            } else {
-                Toast.makeText(context, "Poll not found", Toast.LENGTH_SHORT).show()
-            }
-        } catch (e: Exception) {
-            Toast.makeText(context, "Error loading poll: ${e.message}", Toast.LENGTH_SHORT).show()
-        } finally {
-            isLoading = false
-        }
+        val db = FirebaseDatabase.getInstance().reference
+        db.child("polls").child(pollId)
+            .addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    if (snapshot.exists()) {
+                        question = snapshot.child("question").getValue(String::class.java) ?: ""
+                        options  = snapshot.child("options")
+                            .children.mapNotNull { it.getValue(String::class.java) }
+                    } else {
+                        Toast.makeText(context, "Poll not found", Toast.LENGTH_SHORT).show()
+                    }
+                    isLoading = false
+                }
+                override fun onCancelled(error: DatabaseError) {
+                    Toast.makeText(context, "Error: ${error.message}", Toast.LENGTH_SHORT).show()
+                    isLoading = false
+                }
+            })
     }
+
+    /* ------------------------------------------------------------------ */
+    /*  UI                                                                */
+    /* ------------------------------------------------------------------ */
 
     Scaffold(
         topBar = {
@@ -80,9 +84,7 @@ fun VotePollScreen(
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Color.White)
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = PurplePrimary
-                )
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = PurplePrimary)
             )
         }
     ) { innerPadding ->
@@ -103,16 +105,19 @@ fun VotePollScreen(
                     .padding(innerPadding)
                     .padding(16.dp)
             ) {
+
+                /* ------------ question -------------- */
                 Text(
-                    text = question.ifEmpty { "No question found" },
+                    text  = question.ifEmpty { "No question found" },
                     style = MaterialTheme.typography.headlineSmall.copy(
-                        color = PurplePrimary,
-                        fontWeight = FontWeight.Bold
+                        color       = PurplePrimary,
+                        fontWeight  = FontWeight.Bold
                     )
                 )
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(Modifier.height(16.dp))
 
+                /* ------------ radio list ------------ */
                 options.forEach { option ->
                     Row(
                         Modifier
@@ -120,60 +125,65 @@ fun VotePollScreen(
                             .padding(8.dp)
                             .selectable(
                                 selected = (option == selectedOption),
-                                onClick = { selectedOption = option },
-                                role = Role.RadioButton
+                                onClick  = { selectedOption = option },
+                                role     = Role.RadioButton
                             ),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         RadioButton(
                             selected = (option == selectedOption),
-                            onClick = { selectedOption = option },
-                            colors = RadioButtonDefaults.colors(
-                                selectedColor = PurplePrimary
-                            )
+                            onClick  = { selectedOption = option },
+                            colors   = RadioButtonDefaults.colors(selectedColor = PurplePrimary)
                         )
-                        Spacer(modifier = Modifier.width(8.dp))
+                        Spacer(Modifier.width(8.dp))
                         Text(option, color = PurplePrimary)
                     }
                 }
 
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(Modifier.height(24.dp))
 
+                /* ------------ vote button ----------- */
                 Button(
                     onClick = {
-                        if (selectedOption != null) {
-                            viewModel.vote(pollId, selectedOption!!) { success, error ->
-                                if (success) {
-                                    Toast.makeText(context, "Vote recorded!", Toast.LENGTH_SHORT).show()
-                                } else {
-                                    Toast.makeText(context, "Error: $error", Toast.LENGTH_SHORT).show()
-                                }
+                        selectedOption?.let {
+                            viewModel.vote(pollId, it) { success, error ->
+                                if (success) Toast.makeText(context, "Vote recorded!", Toast.LENGTH_SHORT).show()
+                                else         Toast.makeText(context, "Error: $error",   Toast.LENGTH_SHORT).show()
                             }
-                        } else {
-                            Toast.makeText(context, "Please select an option", Toast.LENGTH_SHORT).show()
-                        }
+                        } ?: Toast.makeText(context, "Please select an option", Toast.LENGTH_SHORT).show()
                     },
                     modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(containerColor = PurplePrimary),
-                    enabled = selectedOption != null
+                    colors   = ButtonDefaults.buttonColors(containerColor = PurplePrimary),
+                    enabled  = selectedOption != null
                 ) {
                     Text("Submit Vote", color = Color.White)
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(Modifier.height(16.dp))
 
+                /* ------------ update button --------- */
                 Button(
-                    onClick = {
-                        navController.navigate("update_poll/$pollId")
-                    },
+                    onClick = { navController.navigate("dashboard") },
                     modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(containerColor = PurpleLight)
+                    colors   = ButtonDefaults.buttonColors(containerColor = PurpleLight)
                 ) {
                     Text("Update This Poll", color = Color.White)
+                }
+                Button(
+                    onClick = { val mydelete= PollViewModel()
+                                mydelete.deletePoll(navController=navController,
+                                    context = context,
+                                    pollId = pollId
+                                    )
+                        navController.navigate("dashboard")
+                              },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors   = ButtonDefaults.buttonColors(containerColor = PurpleLight)
+
+                ) {
+                    Text("Delete This Poll", color = Color.White)
                 }
             }
         }
     }
 }
-
-
