@@ -11,10 +11,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
+import androidx.navigation.NavHostController
 import com.google.firebase.database.*
+import org.threeten.bp.Instant
+import org.threeten.bp.ZoneId
+import org.threeten.bp.format.DateTimeFormatter
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -28,7 +30,7 @@ data class PollListItem(
 /* ---------- screen ---------- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DashboardScreen(navController: NavController) {
+fun DashboardScreen(navController: NavHostController) {
 
     /*‑‑ UI state ‑‑*/
     var polls     by remember { mutableStateOf<List<PollListItem>>(emptyList()) }
@@ -109,7 +111,10 @@ fun DashboardScreen(navController: NavController) {
                     ) {
                         items(polls) { poll ->
                             PollCard(
-                                poll     = poll,
+                                poll = poll,
+                                onClick = { navController.navigate("vote_poll/${poll.id}") },
+                                navController = navController
+
                                     /* You can inject ViewModel and call delete here if desired */
 
                             )
@@ -123,22 +128,22 @@ fun DashboardScreen(navController: NavController) {
 }
 
 /* ---------- reusable card ---------- */
+
 @Composable
 fun PollCard(
     poll: PollListItem,
-
-
+    onClick: () -> Unit,
+    navController: NavHostController
 ) {
     val formatter = remember {
         SimpleDateFormat("dd MMM yyyy, HH:mm", Locale.getDefault())
     }
     val dateStr = formatter.format(Date(poll.createdAt))
-
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 6.dp)
-            .clickable {  },
+            .clickable { onClick() },
         elevation = CardDefaults.cardElevation(4.dp)
     ) {
         Column(Modifier.padding(16.dp)) {
@@ -146,7 +151,6 @@ fun PollCard(
             Spacer(Modifier.height(4.dp))
             Text("Created: $dateStr", style = MaterialTheme.typography.bodySmall)
             Spacer(Modifier.height(12.dp))
-
         }
     }
 }

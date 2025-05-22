@@ -46,92 +46,144 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import android.widget.Toast
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Done
+
+@OptIn(ExperimentalMaterial3Api::class)
 
 @Composable
-fun AddPollScreen(viewModel: PollViewModel = viewModel(),navController: NavHostController) {
+fun AddPollScreen(
+    viewModel: PollViewModel = viewModel(),
+    navController: NavHostController
+) {
     var question by remember { mutableStateOf("") }
     var optionText by remember { mutableStateOf("") }
     var options by remember { mutableStateOf(listOf<String>()) }
     val context = LocalContext.current
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.Top
-    ) {
-        Text("Create a Poll", style = MaterialTheme.typography.headlineSmall)
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        OutlinedTextField(
-            value = question,
-            onValueChange = { question = it },
-            label = { Text("Poll Question") },
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Row(
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            OutlinedTextField(
-                value = optionText,
-                onValueChange = { optionText = it },
-                label = { Text("Add Option") },
-                keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
-                modifier = Modifier.weight(1f)
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Create a new Poll")},
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    titleContentColor = Color.White
+                )
             )
+        },
+        content = { innerPadding ->  // <- required to respect scaffold insets
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .padding(16.dp)
+            ) {
 
-            Spacer(modifier = Modifier.width(8.dp))
 
-            Button(onClick = {
-                if (optionText.isNotBlank()) {
-                    options = options + optionText
-                    optionText = ""
-                }
-            }) {
-                Text("Add")
-            }
-        }
+                Spacer(modifier = Modifier.height(16.dp))
 
-        Spacer(modifier = Modifier.height(16.dp))
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    elevation = CardDefaults.cardElevation(6.dp)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        OutlinedTextField(
+                            value = question,
+                            onValueChange = { question = it },
+                            label = { Text("Poll Question") },
+                            modifier = Modifier.fillMaxWidth()
+                        )
 
-        Text("Options:", style = MaterialTheme.typography.titleMedium)
-        LazyColumn {
-            items(options.size) { index ->
-                Text(text = "${index + 1}. ${options[index]}")
-            }
-        }
+                        Spacer(modifier = Modifier.height(16.dp))
 
-        Spacer(modifier = Modifier.height(24.dp))
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            OutlinedTextField(
+                                value = optionText,
+                                onValueChange = { optionText = it },
+                                label = { Text("Add Option") },
+                                keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
+                                modifier = Modifier.weight(1f)
+                            )
 
-        Button(
-            onClick = {
-                if (question.isBlank() || options.size < 2) {
-                    Toast.makeText(
-                        context,
-                        "Please enter a question and at least two options.",
-                        Toast.LENGTH_SHORT
-                    ).show()
+                            Spacer(modifier = Modifier.width(8.dp))
 
-                }
+                            Button(onClick = {
+                                if (optionText.isNotBlank()) {
+                                    options = options + optionText
+                                    optionText = ""
+                                }
+                            }) {
+                                Text("Add")
+                            }
+                        }
 
-                viewModel.createPoll(question, options) { success, error ->
-                    if (success) {
-                        Toast.makeText(context, "Poll created successfully!", Toast.LENGTH_SHORT).show()
-                        question = ""
-                        options = emptyList()
-                    } else {
-                        Toast.makeText(context, "Error: $error", Toast.LENGTH_SHORT).show()
+                        if (options.isNotEmpty()) {
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Text("Options:", style = MaterialTheme.typography.titleMedium)
+
+                            LazyColumn {
+                                itemsIndexed(options) { index, option ->
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(vertical = 4.dp)
+                                    ) {
+                                        Text(
+                                            text = "${index + 1}. $option",
+                                            modifier = Modifier.weight(1f)
+                                        )
+                                        IconButton(onClick = {
+                                            options = options.toMutableList().also { it.removeAt(index) }
+                                        }) {
+                                            Icon(
+                                                imageVector = Icons.Default.Delete,
+                                                contentDescription = "Remove Option"
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
-            },
-            modifier = Modifier.fillMaxWidth(),
-            enabled = question.isNotBlank() && options.size >= 2
-        ) {
-            Text("Save Poll")
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                Button(
+                    onClick = {
+                        if (question.isBlank() || options.size < 2) {
+                            Toast.makeText(
+                                context,
+                                "Please enter a question and at least two options.",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        } else {
+                            viewModel.createPoll(question, options) { success, error ->
+                                if (success) {
+                                    Toast.makeText(context, "Poll created successfully!", Toast.LENGTH_SHORT).show()
+                                    question = ""
+                                    options = emptyList()
+                                    navController.popBackStack()
+                                } else {
+                                    Toast.makeText(context, "Error: $error", Toast.LENGTH_SHORT).show()
+                                }
+                            }
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(50.dp),
+                    enabled = question.isNotBlank() && options.size >= 2
+                ) {
+                    Text("Save Poll", style = MaterialTheme.typography.titleMedium)
+                }
+            }
         }
-    }
+    )
 }

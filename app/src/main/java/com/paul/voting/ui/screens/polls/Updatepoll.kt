@@ -158,7 +158,9 @@ fun UpdatePollScreen(
                             pollId = pollId
                         )
                         Toast.makeText(context, "Poll updated!", Toast.LENGTH_SHORT).show()
-                        navController.navigate(ROUTE_DASHBOARD)
+                        navController.navigate("dashboard") {
+                            popUpTo("dashboard") { inclusive = true }
+                        }
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = PurplePrimary)
                 ) {

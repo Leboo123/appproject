@@ -39,7 +39,6 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.paul.voting.R
 import com.paul.voting.data.AuthViewModel
-
 @Composable
 fun loginscreen(navController: NavHostController) {
     Column(
@@ -58,7 +57,7 @@ fun loginscreen(navController: NavHostController) {
             style = MaterialTheme.typography.headlineLarge
         )
         Image(
-            painter=painterResource(id = R.drawable.ic_launcher_background),
+            painter=painterResource(id = R.drawable.logo2),
             contentDescription = "Profile picture",
             modifier = Modifier
                 .size(100.dp)
@@ -129,5 +128,6 @@ fun loginscreen(navController: NavHostController) {
 
 
     }
+
 
 }

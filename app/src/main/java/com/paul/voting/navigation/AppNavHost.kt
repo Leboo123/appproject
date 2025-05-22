@@ -1,5 +1,7 @@
 package com.paul.voting.navigation
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
@@ -12,8 +14,9 @@ import com.paul.voting.ui.screens.login.loginscreen
 import com.paul.voting.ui.screens.polls.AddPollScreen
 import com.paul.voting.ui.screens.polls.UpdatePollScreen
 import com.paul.voting.ui.screens.polls.VotePollScreen
-import com.paul.voting.ui.screens.register.registerScreen
+import com.paul.voting.ui.screens.register.RegisterScreen
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun AppNavhost(
     modifier: Modifier=Modifier,
@@ -26,7 +29,7 @@ fun AppNavhost(
             homeScreen(navController)
         }
         composable(ROUTE_REGISTER) {
-            registerScreen(navController)
+            RegisterScreen(navController)
         }
         composable(ROUTE_LOGIN){
             loginscreen(navController)

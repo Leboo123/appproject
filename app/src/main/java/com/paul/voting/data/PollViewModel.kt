@@ -16,6 +16,8 @@ import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.MutableData
 import com.google.firebase.database.Transaction
 import com.google.firebase.database.ValueEventListener
+import com.paul.voting.navigation.ROUTE_DASHBOARD
+import com.paul.voting.ui.screens.dashboard.PollListItem
 import java.util.UUID
 
 class PollViewModel : ViewModel() {
@@ -44,8 +46,14 @@ class PollViewModel : ViewModel() {
 
     private val pollsListener = object : ValueEventListener {
         override fun onDataChange(snapshot: DataSnapshot) {
-            val list = snapshot.children.mapNotNull { it.getValue(Poll::class.java) }
-            polls = list
+            val loaded = snapshot.children.mapNotNull { child ->
+                val id        = child.key ?: return@mapNotNull null
+                val question  = child.child("question").getValue(String::class.java) ?: return@mapNotNull null
+                val createdAt = child.child("createdAt").getValue(Long::class.java) ?: 0L
+                PollListItem(id, question, createdAt)
+            }
+
+
         }
         override fun onCancelled(error: DatabaseError) {
             errorMessage = error.message
@@ -181,10 +189,10 @@ class PollViewModel : ViewModel() {
                 pollsRef.child(pollId).removeValue()
                     .addOnSuccessListener {
                         Toast.makeText(context, "Poll deleted", Toast.LENGTH_LONG).show()
-                        navController.popBackStack()
                     }
                     .addOnFailureListener {
                         Toast.makeText(context, "Delete failed", Toast.LENGTH_LONG).show()
+                        navController.navigate(ROUTE_DASHBOARD)
                     }
             }
             .setNegativeButton("No") { d, _ -> d.dismiss() }

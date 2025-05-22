@@ -5,6 +5,7 @@ import com.paul.voting.R
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -19,6 +20,8 @@ import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -43,134 +46,123 @@ import androidx.navigation.NavHostController
 import com.paul.voting.data.AuthViewModel
 
 @Composable
-fun registerScreen(navController: NavHostController) {
-    Column(
+
+fun RegisterScreen(navController: NavHostController) {
+    val context = LocalContext.current
+
+    var fullname by remember { mutableStateOf(TextFieldValue("")) }
+    var email by remember { mutableStateOf(TextFieldValue("")) }
+    var pass by remember { mutableStateOf(TextFieldValue("")) }
+    var confirmpass by remember { mutableStateOf(TextFieldValue("")) }
+
+    Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(color = Color.White),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    )    {
-        Text(
-            text = "REGISTER",
-            color = Color.Gray,
-            fontSize = 40.sp,
-
-            style = MaterialTheme.typography.headlineLarge
-        )
-        Image(
-            painter = painterResource(id = R.drawable.ic_launcher_background),
-            contentDescription = "Logo",
+            .background(Color(0xFFF0F4F8)), // light background
+        contentAlignment = Alignment.Center
+    ) {
+        Card(
             modifier = Modifier
-                .size(100.dp)
-                .clip(CircleShape)
-        )
-        Spacer(modifier = Modifier.height(20.dp))
-        Text(
-            text = "Create an account",
-            color = Color.Blue,
-            fontSize = 16.sp,
-        )
-        var fullname by remember { mutableStateOf(TextFieldValue("") )}
-        var email by remember { mutableStateOf(TextFieldValue("")) }
-        var confirmpass by remember { mutableStateOf(TextFieldValue(""))}
-        var pass by remember { mutableStateOf(TextFieldValue("") )}
-
-        var context= LocalContext.current
-
-        OutlinedTextField(
-            value = fullname,
-            onValueChange = { fullname = it },
-            label = { Text("Fullname") },
-            singleLine = true,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = 20.dp, end = 20.dp),
-
-            leadingIcon = {
-                Icon(
-                    imageVector = Icons.Default.Person,
-                    contentDescription = "Fullname"
+                .fillMaxWidth(0.9f)
+                .padding(16.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+            shape = RoundedCornerShape(16.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Text(
+                    text = "REGISTER",
+                    color = Color(0xFF1E88E5),
+                    fontSize = 30.sp,
+                    style = MaterialTheme.typography.headlineMedium
                 )
-            }
 
-        )
-
-
-        Spacer(modifier = Modifier.height(16.dp))
-        OutlinedTextField(
-            value = email,
-            onValueChange = { email = it },
-            label = { Text("emailaddress") },
-            singleLine = true,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = 20.dp, end = 20.dp),
-
-            leadingIcon = {
-                Icon(
-                    imageVector = Icons.Default.Email,
-                    contentDescription = "email address"
+                Image(
+                    painter = painterResource(id = R.drawable.logo2),
+                    contentDescription = "Logo",
+                    modifier = Modifier
+                        .size(90.dp)
+                        .clip(CircleShape)
                 )
-            }
 
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-        OutlinedTextField(
-            value = pass,
-            onValueChange = { pass = it },
-            label = { Text(" Password") },
-            singleLine = true,
-            visualTransformation = PasswordVisualTransformation(),
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = 20.dp, end = 20.dp),
-
-            leadingIcon = {
-                Icon(
-                    imageVector = Icons.Default.Lock,
-                    contentDescription = "Password"
+                Text(
+                    text = "Create an account",
+                    color = Color.Gray,
+                    style = MaterialTheme.typography.bodyMedium
                 )
-            }
 
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        OutlinedTextField(
-            value = confirmpass,
-            onValueChange = { confirmpass = it },
-            label = { Text(" Confirm Password") },
-            singleLine = true,
-            visualTransformation = PasswordVisualTransformation(),
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = 20.dp, end = 20.dp),
-            shape = RoundedCornerShape(5.dp),
-
-            leadingIcon = {
-                Icon(
-                    imageVector = Icons.Default.Lock,
-                    contentDescription = "Confirm Password"
+                OutlinedTextField(
+                    value = fullname,
+                    onValueChange = { fullname = it },
+                    label = { Text("Full Name") },
+                    singleLine = true,
+                    leadingIcon = {
+                        Icon(Icons.Default.Person, contentDescription = "Fullname")
+                    },
+                    modifier = Modifier.fillMaxWidth()
                 )
+
+                OutlinedTextField(
+                    value = email,
+                    onValueChange = { email = it },
+                    label = { Text("Email Address") },
+                    singleLine = true,
+                    leadingIcon = {
+                        Icon(Icons.Default.Email, contentDescription = "Email")
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                OutlinedTextField(
+                    value = pass,
+                    onValueChange = { pass = it },
+                    label = { Text("Password") },
+                    singleLine = true,
+                    visualTransformation = PasswordVisualTransformation(),
+                    leadingIcon = {
+                        Icon(Icons.Default.Lock, contentDescription = "Password")
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                OutlinedTextField(
+                    value = confirmpass,
+                    onValueChange = { confirmpass = it },
+                    label = { Text("Confirm Password") },
+                    singleLine = true,
+                    visualTransformation = PasswordVisualTransformation(),
+                    leadingIcon = {
+                        Icon(Icons.Default.Lock, contentDescription = "Confirm Password")
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Button(
+                    onClick = {
+                        val auth = AuthViewModel(navController, context)
+                        auth.signup(
+                            fullname.text.trim(),
+                            email.text.trim(),
+                            pass.text.trim(),
+                            confirmpass.text.trim()
+                        )
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(50.dp),
+                    shape = RoundedCornerShape(10.dp)
+                ) {
+                    Text("REGISTER")
+                }
+
+                TextButton(onClick = { navController.navigate("login") }) {
+                    Text("Already have an account? Login here")
+                }
             }
-
-        )
-
-        Button(onClick = {
-            val myregister= AuthViewModel(navController,context)
-            myregister.signup(fullname.text.trim(),email.text.trim(),pass.text.trim(),confirmpass.text.trim())
-        }){
-            Text(
-                text="REGISTER"
-            )
         }
-        TextButton(onClick = {navController.navigate("login")}) {
-            Text(
-                text="Already have an account?Login here"
-            )
-
-        }
-
     }
 }
